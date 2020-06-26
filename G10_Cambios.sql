@@ -230,14 +230,7 @@ execute procedure FN_GR10_VERIF_JUGO_JUEGO();
 create or replace function FN_GR10_SINCRONIZAR_COMENTA_COMENTARIO()
     returns trigger as
 $$
-declare
-    cant integer;
 begin
-    select count(*)
-    into cant
-    from gr10_comenta
-    where id_usuario = new.id_usuario
-      and id_juego = new.id_juego;
     if (not exists(
             select 1
             from gr10_comenta
@@ -259,7 +252,7 @@ end
 $$ language 'plpgsql';
 
 create trigger TR_GR10_SINCRONIZAR_COMENTA_COMENTARIO
-    after insert or update of id_juego, id_usuario or delete
+   before insert or update of id_juego, id_usuario
     on gr10_comentario
     for each row
 execute procedure FN_GR10_SINCRONIZAR_COMENTA_COMENTARIO();
@@ -277,6 +270,7 @@ execute procedure FN_GR10_SINCRONIZAR_COMENTA_COMENTARIO();
 --values ('t', 1, 3);
 
 --Inserto en la tabla comenta un valor para el usuario 1 en el juego 3 para evitar conflictos
+
 --insert into gr10_comenta(id_usuario, id_juego, fecha_primer_com, fecha_ultimo_com)
 --values (1, 3, '2020-08-30', null);
 
@@ -285,4 +279,4 @@ execute procedure FN_GR10_SINCRONIZAR_COMENTA_COMENTARIO();
 --tabla Comenta como indica la consigna
 
 --insert into gr10_comentario (id_usuario, id_juego, id_comentario, fecha_comentario, comentario)
---values (1, 3, 7, '2020-08-23', 'comentario funcional');
+--values (1, 4, 8, '2020-08-24', 'comentario funcional');
