@@ -4,4 +4,4 @@ Terminadas las consignas A, B y C
 
 - Antes de hacer un test pegarle un delete y una creada a las tablas (aunque sea una vez al día)
 
--Creo que la consigna de los servicios está bien, pegale una chusmeada por las dudas
+-Creo que la consigna de los servicios está bien, pero falta que se actualice la tabla "comentario" cuando inserto algo en "comenta" aunque no sé si es necesario ya que se supone que se genera una nueva row de la tabla "comenta" cada vez que un usuario comenta por primera vez un juego...
