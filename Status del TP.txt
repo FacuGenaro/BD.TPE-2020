@@ -1,0 +1,7 @@
+Terminadas las consignas A, B y C
+
+- Falta corregir / replantear las RI que no usamos pero las piden igual XD creo que los triggers de la B están bien
+
+- Antes de hacer un test pegarle un delete y una creada a las tablas (aunque sea una vez al día)
+
+-Creo que la consigna de los servicios está bien, pegale una chusmeada por las dudas
