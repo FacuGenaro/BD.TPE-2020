@@ -1,4 +1,4 @@
-set search_path = unc_248580;
+set search_path = unc_248270;
 
 insert into gr10_tipo_usuario (id_tipo_usuario, descripcion)
 values (1, 'tipoUsuario1'),

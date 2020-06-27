@@ -1,12 +1,17 @@
-set search_path = unc_248580;
+set search_path = unc_248270;
 
---##############################################################################
---##############################################################################
--- Inicio de restricciones
+/*
+##############################################################################################################
+##############################################################################################################
+##############################################################################################################
 
---RI Inciso A
--- La fecha del primer comentario tiene que ser anterior a la fecha del ultimo comentario en el
---caso de que ultimo comentario no sea null
+RESTRICCIONES
+
+B.a. La fecha del primer comentario tiene que ser anterior a la fecha del último comentario si este
+no es nulo.
+
+*/
+
 alter table gr10_comenta
     add constraint GR10_CHK_PRIMER_COMENTARIO
         check ( (fecha_primer_com < fecha_ultimo_com) or (fecha_ultimo_com is null));
@@ -16,14 +21,15 @@ alter table gr10_comenta
 --set fecha_primer_com = '2020-06-24', fecha_ultimo_com = '2020-06-26'
 --where id_usuario = 1;
 
---##############################################################################
---##############################################################################
---##############################################################################
+/*
+##############################################################################################################
+##############################################################################################################
+##############################################################################################################
 
---RI Inciso B
---Un usuario solo puede comentar 1 vez al día en cada juego
---Esta restricción es de tabla ya que afecta a toda la tabla en vez de solo una tupla
+ B. b. Cada usuario sólo puede comentar una vez al día cada juego.
 
+ Esta restricción es de tabla ya que afecta a toda la tabla en vez de solo una tupla
+ */
 
 --Verificar esta RI (esta hay que rehacerla directamente creo)
 
@@ -61,35 +67,42 @@ create trigger TR_GR10_COMENTARIO_DIARIO
     for each row
 execute procedure FN_GR10_COMENTARIO_DIARIO();
 
--- Test
--- Si intento insertar un comentario, el trigger verifica en cada fila si existe un comentario del mismo
--- usuario con la nueva fecha del comentario (que sería la fecha actual) y si existe, no permite
--- la insercion del comentario
+/*
+CASO DE PRUEBA:
 
---El siguiente insert no cumple la condicion del trigger ya que la fecha cargada en la bd para
--- el comentario del usuario 1 en el juego 1 es current_date por lo tanto dará error
+Si intento insertar un comentario, el trigger verifica en cada fila si existe un comentario del mismo
+usuario con la nueva fecha del comentario (que sería la fecha actual) y si existe, no permite
+la insercion del comentario
 
---insert into gr10_comentario(id_usuario, id_juego, id_comentario, fecha_comentario, comentario)
---values (1, 1, 5, current_date, 'este comentario falla');
+El siguiente insert no cumple la condicion del trigger ya que la fecha cargada en la bd para
+el comentario del usuario 1 en el juego 1 es current_date por lo tanto dará error
+ */
 
---En cambio esta sentencia quiere insertar un comentario con una fecha futura a la cargada en la bd
---por eso será insertado sin errores
+--insert into gr10_comentario(id_usuario, id_juego, id_comentario, fecha_comentario, comentario) values (1, 1, 5, current_date, 'este comentario falla');
 
---insert into gr10_comentario(id_usuario, id_juego, id_comentario, fecha_comentario, comentario)
---values (1, 1, 5, '2020-07-15', 'este comentario funciona');
+/*
+En cambio esta sentencia quiere insertar un comentario con una fecha futura a la cargada en la bd
+por eso será insertado sin errores
+ */
 
---Dejo el select para verificar
+--insert into gr10_comentario(id_usuario, id_juego, id_comentario, fecha_comentario, comentario) values (1, 1, 5, '2020-07-15', 'este comentario funciona');
+
+/*
+Para verificar:
+ */
 
 --select *
 --from gr10_comentario;
 
---##############################################################################
---##############################################################################
---##############################################################################
+/*
+##############################################################################################################
+##############################################################################################################
+##############################################################################################################
 
---RI Inciso C
--- Un usuario no puede recomendar un juego si no lo votó previamente
--- Esta es una restriccion global ya que involucra más de una tabla
+ B.c. Un usuario no puede recomendar un juego si no ha votado previamente dicho juego.
+
+ Esta es una restriccion global ya que involucra más de una tabla
+ */
 
 --Verificar esta RI Tambien
 --create
@@ -103,7 +116,7 @@ execute procedure FN_GR10_COMENTARIO_DIARIO();
 --));
 
 create or replace function FN_GR10_VERIF_RECOM_VOTO()
-    -- en esta funcion verifico si el usuario votó el juego para poder recomendarlo
+    -- En esta funcion verifico si el usuario votó el juego para poder recomendarlo
     returns trigger as
 $$
 begin
@@ -126,21 +139,26 @@ create trigger TR_GR10_VERIF_RECOM_VOTO
     for each row
 execute procedure FN_GR10_VERIF_RECOM_VOTO();
 
---Test
--- Si intento insertar una recomendacion pero no tiene voto asociado da error, en esta caso intento
--- insertar una recomendacion de parte del usuario 2 al juego 3 pero se activa la excepcion del
--- trigger ya que el juego no posee un voto del usuario
+/*
+CASO DE PRUEBA:
 
---insert into gr10_recomendacion (id_recomendacion, email_recomendado, id_usuario, id_juego)
---values (5, 'RecoError', 2, 3);
+Si intento insertar una recomendacion pero no tiene voto asociado da error, en esta caso intento
+insertar una recomendacion de parte del usuario 2 al juego 3 pero se activa la excepcion del
+trigger ya que el juego no posee un voto del usuario
+*/
 
--- En cambio si intento insertar una recomendacion de la cual existe el voto, puedo hacerlo
--- sin problemas como debería ser
+--insert into gr10_recomendacion (id_recomendacion, email_recomendado, id_usuario, id_juego) values (5, 'RecoError', 2, 3);
 
---insert into gr10_recomendacion (id_recomendacion, email_recomendado, id_usuario, id_juego)
---values (5, 'RecoSuccess', 2, 2);
+/*
+En cambio si intento insertar una recomendacion de la cual existe el voto, puedo hacerlo
+sin problemas como debería ser
+ */
 
---Dejo hecho los select para poder ver la tabla voto y la tabla reocmendacion
+--insert into gr10_recomendacion (id_recomendacion, email_recomendado, id_usuario, id_juego) values (5, 'RecoSuccess', 2, 2);
+
+/*
+ Para verificar
+ */
 
 --select *
 --from gr10_recomendacion;
@@ -148,15 +166,15 @@ execute procedure FN_GR10_VERIF_RECOM_VOTO();
 --select *
 --from gr10_voto;
 
+/*
+##############################################################################################################
+##############################################################################################################
+##############################################################################################################
 
---##############################################################################
---##############################################################################
---##############################################################################
+B.d. Un usuario no puede comentar un juego que no ha jugado.
 
---Inciso D
-
--- Un usuario no puede comentar sin haber jugado al juego, es una restriccion de tabla ya que
--- debo verificar en la tabla juega para luego insertar el comentario en la tabla comentario
+Es una restriccion de tabla ya que debo verificar en la tabla juega para luego insertar el comentario en la tabla comentario
+ */
 
 --Verificar esta RI Tambien
 --create
@@ -172,8 +190,10 @@ execute procedure FN_GR10_VERIF_RECOM_VOTO();
 --  and (j.finalizado = 't')));
 
 create or replace function FN_GR10_VERIF_JUGO_JUEGO()
-    -- en esta funcion verifico si el usuario jugó al juego para poder comentario, asumo que
-    -- para considerarse "jugado" la variable finalziado tiene que ser true
+    /*
+    En esta funcion verifico si el usuario jugó al juego para poder comentario, asumo que
+    para considerarse "jugado" la variable finalziado tiene que ser true
+    */
     returns trigger as
 $$
 begin
@@ -197,36 +217,47 @@ create trigger TR_GR10_VERIF_JUGO_JUEGO
     for each row
 execute procedure FN_GR10_VERIF_JUGO_JUEGO();
 
---Test
---Este insert funciona ya que el usuario 3 está cargado en la tabla juega con el valor
---finalizado = true por lo tanto se agrega correctamente
+/*
+CASO DE PRUEBA:
 
---insert into gr10_comentario (id_usuario, id_juego, id_comentario, fecha_comentario, comentario)
---values (3, 3, 28, '2020-08-17', 'comentarioFunciona');
+Este insert funciona ya que el usuario 3 está cargado en la tabla juega con el valor
+finalizado = true por lo tanto se agrega correctamente
+ */
 
---Este insert no funciona ya que el usuario 3 está cargado en la tabla juega con el valor
--- finalizado = false, por lo tanto se muestra la excepción del trigger ya que no se cumple la condicion
--- establecida
 
---insert into gr10_comentario (id_usuario, id_juego, id_comentario, fecha_comentario, comentario)
---values (2, 2, 23, '2020-08-17', 'comentarioFalla');
+--insert into gr10_comentario (id_usuario, id_juego, id_comentario, fecha_comentario, comentario) values (3, 3, 28, '2020-08-17', 'comentarioFunciona');
 
---##############################################################################
---##############################################################################
--- Fin de restricciones
+/*
+Este insert no funciona ya que el usuario 3 está cargado en la tabla juega con el valor
+finalizado = false, por lo tanto se muestra la excepción del trigger ya que no se cumple la condicion
+establecida
+ */
 
--- Inicio de servicios
---##############################################################################
---##############################################################################
+--insert into gr10_comentario (id_usuario, id_juego, id_comentario, fecha_comentario, comentario) values (2, 2, 23, '2020-08-17', 'comentarioFalla');
+
+/*
+##############################################################################################################
+##############################################################################################################
+##############################################################################################################
+
+C) a. La primera vez que se inserta un comentario de un usuario para un juego se debe
+hacer el insert conjunto en ambas tablas, colocando la fecha del primer comentario y
+último comentario en en nulo.
+   b. Los posteriores comentarios para sólo deben modificar la fecha de último comentario
+e insertar en COMENTARIO
+
+
+La primera vez que se inserta un comentario de un usuario para un juego se debe
+hacer el insert conjunto en ambas tablas, colocando la fecha del primer comentario y
+último comentario en en nulo.
+
+Los posteriores comentarios para sólo deben modificar la fecha de último comentario
+e insertar en COMENTARIO
+*/
 
 -- Incisos A y B
 --
---La primera vez que se inserta un comentario de un usuario para un juego se debe
---hacer el insert conjunto en ambas tablas, colocando la fecha del primer comentario y
---último comentario en en nulo.
 
---Los posteriores comentarios para sólo deben modificar la fecha de último comentario
---e insertar en COMENTARIO
 create or replace function FN_GR10_SINCRONIZAR_COMENTA_COMENTARIO()
     returns trigger as
 $$
@@ -257,7 +288,9 @@ create trigger TR_GR10_SINCRONIZAR_COMENTA_COMENTARIO
     for each row
 execute procedure FN_GR10_SINCRONIZAR_COMENTA_COMENTARIO();
 
---Test
+/*
+ Para verificar:
+ */
 
 --select *
 --from gr10_comentario;
@@ -265,18 +298,56 @@ execute procedure FN_GR10_SINCRONIZAR_COMENTA_COMENTARIO();
 --select *
 --from gr10_comenta;
 
---Supongo que el usuario 1 jugó al juego 3
---insert into gr10_juega(finalizado, id_usuario, id_juego)
---values ('t', 1, 3);
+/*
+ Supongo que el usuario 1 jugó al juego 3
+ */
 
---Inserto en la tabla comenta un valor para el usuario 1 en el juego 3 para evitar conflictos
+--insert into gr10_juega(finalizado, id_usuario, id_juego) values ('t', 1, 3);
 
---insert into gr10_comenta(id_usuario, id_juego, fecha_primer_com, fecha_ultimo_com)
---values (1, 3, '2020-08-30', null);
+/*
+Inserto en la tabla comenta un valor para el usuario 1 en el juego 3 para evitar conflictos
+ */
 
---Inserto un comentario para disparar el trigger, en este caso ya que el trigger detecta que hay
---un comentario previo de un usuario, entonces procede a insertar el comentario y a actualizar la
---tabla Comenta como indica la consigna
+--insert into gr10_comenta(id_usuario, id_juego, fecha_primer_com, fecha_ultimo_com) values (1, 3, '2020-08-30', null);
 
---insert into gr10_comentario (id_usuario, id_juego, id_comentario, fecha_comentario, comentario)
---values (1, 4, 8, '2020-08-24', 'comentario funcional');
+/*
+Inserto un comentario para disparar el trigger, en este caso ya que el trigger detecta que hay
+un comentario previo de un usuario, entonces procede a insertar el comentario y a actualizar la
+tabla Comenta como indica la consigna
+ */
+
+--insert into gr10_comentario (id_usuario, id_juego, id_comentario, fecha_comentario, comentario) values (1, 4, 8, '2020-08-24', 'comentario funcional');
+
+/*
+ ----------------------------------------------------------------------------------------------------------------------------------------
+ VISTAS
+ */
+
+/*
+D.1. Listar Todos los comentarios realizados durante el último mes descartando aquellos juegos
+de la Categoría “Sin Categorías”.
+ */
+
+CREATE VIEW GR10_COMENTARIOS_ULTIMO_MES AS
+    SELECT c.*
+        FROM gr10_comentario c
+            JOIN gr10_juego j ON (c.id_juego = j.id_juego)
+            JOIN gr10_categoria ca ON (ca.id_categoria = j.id_categoria)
+            WHERE (ca.descripcion NOT LIKE 'Sin categorías')
+            AND extract(month FROM c.fecha_comentario) = extract(month FROM CURRENT_DATE)
+            AND extract(year FROM c.fecha_comentario) = extract(year FROM CURRENT_DATE);
+
+/*
+D.2. Identificar aquellos usuarios que han comentado todos los juegos durante el último año,
+teniendo en cuenta que sólo pueden comentar aquellos juegos que han jugado.
+ */
+
+CREATE VIEW GR10_COMENTARIOS_USUARIOS_TODOS_JUEGOS_JUGADOS AS
+    SELECT u.id_usuario
+    FROM gr10_usuario u, (SELECT id_usuario
+                          FROM (SELECT id_usuario, id_juego
+                                FROM gr10_comentario
+                                GROUP BY id_usuario, id_juego) AS t1
+                          GROUP BY t1.id_usuario
+                          HAVING COUNT(*) = (SELECT COUNT(*) FROM gr10_juego)) AS u1
+    WHERE u.id_usuario = u1.id_usuario;
