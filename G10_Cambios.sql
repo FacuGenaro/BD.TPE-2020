@@ -1,5 +1,5 @@
-set search_path = unc_248270;
-
+--set search_path = unc_248270;
+set search_path = unc_248580;
 /*
 ##############################################################################################################
 ##############################################################################################################
@@ -272,6 +272,7 @@ begin
         )) then
         insert into gr10_comenta(id_usuario, id_juego, fecha_primer_com, fecha_ultimo_com)
         values (new.id_usuario, new.id_juego, new.fecha_comentario, null);
+        return new;
     else
         update gr10_comenta
         set fecha_ultimo_com = new.fecha_comentario
@@ -288,35 +289,38 @@ create trigger TR_GR10_SINCRONIZAR_COMENTA_COMENTARIO
     for each row
 execute procedure FN_GR10_SINCRONIZAR_COMENTA_COMENTARIO();
 
-/*
- Para verificar:
- */
-
---select *
---from gr10_comentario;
-
---select *
---from gr10_comenta;
 
 /*
- Supongo que el usuario 1 jugó al juego 3
- */
+Tomando como ejemplo el usuario 62 en el juego 62
 
---insert into gr10_juega(finalizado, id_usuario, id_juego) values ('t', 1, 3);
-
-/*
-Inserto en la tabla comenta un valor para el usuario 1 en el juego 3 para evitar conflictos
- */
-
---insert into gr10_comenta(id_usuario, id_juego, fecha_primer_com, fecha_ultimo_com) values (1, 3, '2020-08-30', null);
-
-/*
 Inserto un comentario para disparar el trigger, en este caso ya que el trigger detecta que hay
 un comentario previo de un usuario, entonces procede a insertar el comentario y a actualizar la
 tabla Comenta como indica la consigna
  */
 
---insert into gr10_comentario (id_usuario, id_juego, id_comentario, fecha_comentario, comentario) values (1, 4, 8, '2020-08-24', 'comentario funcional');
+--insert into gr10_comentario (id_usuario, id_juego, id_comentario, fecha_comentario, comentario) values (62, 62, 1, '2020-08-31', 'comentario funcional');
+
+/*
+Este comentario se insertó correctamente ya que no tiene conflictos con otros triggers y si no
+existe la entrada en la tabla Comenta, se genera automaticamente como lo indica el inciso A
+ */
+
+insert into gr10_comentario (id_usuario, id_juego, id_comentario, fecha_comentario, comentario) values (62, 62, 2, '2020-09-01', 'comentario actualizado en tabla comenta');
+
+/*
+Este comentario se insertó correctamente tambien, y ademas se actualizó la fecha de ultimo comentario en
+la tabla Comenta para el par id_usuario = 62 e id_juego = 62
+
+Dejo los select acá para verificar
+ */
+
+--select *
+--from gr10_comentario
+--where id_usuario = 62;
+
+--select *
+--from gr10_comenta
+--where id_usuario = 62;
 
 /*
  ----------------------------------------------------------------------------------------------------------------------------------------
