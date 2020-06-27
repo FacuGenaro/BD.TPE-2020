@@ -1,5 +1,5 @@
 --set search_path = unc_248270;
-set search_path = unc_248580;
+set search_path = unc_248270;
 /*
 ##############################################################################################################
 ##############################################################################################################
@@ -51,7 +51,8 @@ begin
             select 1
             from gr10_comentario
             where id_usuario = new.id_usuario
-              and fecha_comentario = new.fecha_comentario
+                and fecha_comentario = new.fecha_comentario
+                and id_juego = new.id_juego
         )
     then
         raise exception 'El usuario % ya comentó este juego hoy %', new.id_usuario, new.fecha_comentario;
@@ -305,7 +306,7 @@ Este comentario se insertó correctamente ya que no tiene conflictos con otros t
 existe la entrada en la tabla Comenta, se genera automaticamente como lo indica el inciso A
  */
 
-insert into gr10_comentario (id_usuario, id_juego, id_comentario, fecha_comentario, comentario) values (62, 62, 2, '2020-09-01', 'comentario actualizado en tabla comenta');
+--insert into gr10_comentario (id_usuario, id_juego, id_comentario, fecha_comentario, comentario) values (62, 62, 2, '2020-09-01', 'comentario actualizado en tabla comenta');
 
 /*
 Este comentario se insertó correctamente tambien, y ademas se actualizó la fecha de ultimo comentario en
@@ -355,3 +356,29 @@ CREATE VIEW GR10_COMENTARIOS_USUARIOS_TODOS_JUEGOS_JUGADOS AS
                           GROUP BY t1.id_usuario
                           HAVING COUNT(*) = (SELECT COUNT(*) FROM gr10_juego)) AS u1
     WHERE u.id_usuario = u1.id_usuario;
+
+/*
+ D.3. Realizar el ranking de los 20 juegos mejor puntuados por los Usuarios. El ranking debe ser
+generado considerando el promedio del valor puntuado por los usuarios y que el juego
+hubiera sido calificado más de 5 veces.
+ */
+
+CREATE VIEW GR10_RANKING_MEJOR_PUNTUADOS AS
+SELECT j.*
+FROM gr10_juego j
+    JOIN gr10_voto v ON (v.id_juego = j.id_juego)
+GROUP BY j.id_juego
+
+HAVING (count(j.id_juego) > 5)
+ORDER BY (avg(v.valor_voto)) DESC
+LIMIT 20;
+
+/*
+ Para verificar:
+ */
+
+--select id_juego, avg(valor_voto)
+--from gr10_voto
+--group by id_juego
+--having count(*) > 5
+--order by avg(valor_voto) DESC;
