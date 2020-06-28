@@ -1,5 +1,5 @@
 --set search_path = unc_248270;
-set search_path = unc_248270;
+set search_path = unc_248580;
 
 -- NIVEL
 INSERT INTO GR10_NIVEL (id_nivel_juego,descripcion) VALUES (1,'nec, malesuada ut, sem.');
@@ -1092,4 +1092,3 @@ INSERT INTO GR10_JUEGA (id_usuario,id_juego, finalizado) VALUES (101,101, TRUE);
 
 
 insert into gr10_comentario (id_usuario, id_juego, id_comentario, fecha_comentario, comentario) values (101, 101, 101, '2020-06-01', 'Comentario 101');
-

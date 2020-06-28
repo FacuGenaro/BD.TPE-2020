@@ -1,5 +1,5 @@
 --set search_path = unc_248270;
-set search_path = unc_248270;
+set search_path = unc_248580;
 /*
 ##############################################################################################################
 ##############################################################################################################
@@ -16,10 +16,12 @@ alter table gr10_comenta
     add constraint GR10_CHK_PRIMER_COMENTARIO
         check ( (fecha_primer_com < fecha_ultimo_com) or (fecha_ultimo_com is null));
 
---Test
---update gr10_comenta
---set fecha_primer_com = '2020-06-24', fecha_ultimo_com = '2020-06-26'
---where id_usuario = 1;
+/*
+Para esta prueba tomamos como ejemplo el usuario 101 cuya fecha_primer_com es 2020_08_31 que posee comentarios en todos los juegos e
+intentaremos insertar un comentario con una fecha anterior
+*/
+
+--insert into gr10_comentario(id_usuario, id_juego, id_comentario, fecha_comentario, comentario) values (101, 1, 1, '2020-05-31', 'este comentario falla');
 
 /*
 ##############################################################################################################
@@ -31,17 +33,12 @@ alter table gr10_comenta
  Esta restricción es de tabla ya que afecta a toda la tabla en vez de solo una tupla
  */
 
---Verificar esta RI (esta hay que rehacerla directamente creo)
-
 --alter table gr10_comentario
---add constraint GR10_CHK_COMENTARIO_DIARIO
---check ( exists(
---select 1
---from gr10_comentario
---where (fecha_comentario = current_date)
---group by id_usuario;
---                    )
---    );
+--    add constraint GR10_CHK_COMENTARIO
+--        check (not exists(select 1
+--                          from gr10_comentario
+--                          where fecha_comentario = current_date)
+--               );
 
 create or replace function FN_GR10_COMENTARIO_DIARIO()
     returns trigger as
@@ -51,8 +48,8 @@ begin
             select 1
             from gr10_comentario
             where id_usuario = new.id_usuario
-                and fecha_comentario = new.fecha_comentario
-                and id_juego = new.id_juego
+              and fecha_comentario = new.fecha_comentario
+              and id_juego = new.id_juego
         )
     then
         raise exception 'El usuario % ya comentó este juego hoy %', new.id_usuario, new.fecha_comentario;
@@ -63,7 +60,7 @@ $$
     language 'plpgsql';
 
 create trigger TR_GR10_COMENTARIO_DIARIO
-    before insert
+    before insert or update of id_usuario, id_juego
     on gr10_comentario
     for each row
 execute procedure FN_GR10_COMENTARIO_DIARIO();
@@ -76,24 +73,18 @@ usuario con la nueva fecha del comentario (que sería la fecha actual) y si exis
 la insercion del comentario
 
 El siguiente insert no cumple la condicion del trigger ya que la fecha cargada en la bd para
-el comentario del usuario 1 en el juego 1 es current_date por lo tanto dará error
- */
+el comentario del usuario 101 en el juego 1 es 2020-08-31 por lo tanto dará error
 
---insert into gr10_comentario(id_usuario, id_juego, id_comentario, fecha_comentario, comentario) values (1, 1, 5, current_date, 'este comentario falla');
+ */
+--insert into gr10_comentario(id_usuario, id_juego, id_comentario, fecha_comentario, comentario) values (101, 1, 1, '2020-08-31', 'este comentario falla');
 
 /*
 En cambio esta sentencia quiere insertar un comentario con una fecha futura a la cargada en la bd
 por eso será insertado sin errores
  */
 
---insert into gr10_comentario(id_usuario, id_juego, id_comentario, fecha_comentario, comentario) values (1, 1, 5, '2020-07-15', 'este comentario funciona');
+--insert into gr10_comentario(id_usuario, id_juego, id_comentario, fecha_comentario, comentario) values (101, 1, 2, '2020-09-01', 'este comentario funciona');
 
-/*
-Para verificar:
- */
-
---select *
---from gr10_comentario;
 
 /*
 ##############################################################################################################
@@ -105,16 +96,13 @@ Para verificar:
  Esta es una restriccion global ya que involucra más de una tabla
  */
 
---Verificar esta RI Tambien
---create
---assertion G10_CHK_VOTO
---check(exists(
---select *
---from gr10_voto v
---         join gr10_recomendacion r on v.id_usuario = r.id_usuario and v.id_juego = r.id_juego
---where (v.id_usuario = r.id_usuario)
---  and (v.id_juego = r.id_juego)
---));
+--Si lo que estoy insertando existe en la tabla generada por el inner join, entonces puedo insertar
+--create assertion as G10_CHK_VOTO
+--    check( exists(
+--                select 1
+--                from gr10_voto v
+--                    join gr10_recomendacion r on v.id_usuario = r.id_usuario and v.id_juego = r.id_juego
+--        ));
 
 create or replace function FN_GR10_VERIF_RECOM_VOTO()
     -- En esta funcion verifico si el usuario votó el juego para poder recomendarlo
@@ -135,37 +123,28 @@ $$
     language 'plpgsql';
 
 create trigger TR_GR10_VERIF_RECOM_VOTO
-    before insert
+    before insert or update of id_usuario, id_juego
     on gr10_recomendacion
     for each row
 execute procedure FN_GR10_VERIF_RECOM_VOTO();
+
 
 /*
 CASO DE PRUEBA:
 
 Si intento insertar una recomendacion pero no tiene voto asociado da error, en esta caso intento
-insertar una recomendacion de parte del usuario 2 al juego 3 pero se activa la excepcion del
+insertar una recomendacion de parte del usuario 1 al juego 2 pero se activa la excepcion del
 trigger ya que el juego no posee un voto del usuario
 */
 
---insert into gr10_recomendacion (id_recomendacion, email_recomendado, id_usuario, id_juego) values (5, 'RecoError', 2, 3);
+--insert into gr10_recomendacion (id_recomendacion, email_recomendado, id_usuario, id_juego) values (5, 'RecoError', 1, 2);
 
 /*
 En cambio si intento insertar una recomendacion de la cual existe el voto, puedo hacerlo
-sin problemas como debería ser
+sin problemas. Acá tomamos como ejemplo el id usuario 1 y el juego 23
  */
 
---insert into gr10_recomendacion (id_recomendacion, email_recomendado, id_usuario, id_juego) values (5, 'RecoSuccess', 2, 2);
-
-/*
- Para verificar
- */
-
---select *
---from gr10_recomendacion;
-
---select *
---from gr10_voto;
+--insert into gr10_recomendacion (id_recomendacion, email_recomendado, id_usuario, id_juego) values (5, 'RecoSuccess', 1, 23);
 
 /*
 ##############################################################################################################
@@ -177,18 +156,14 @@ B.d. Un usuario no puede comentar un juego que no ha jugado.
 Es una restriccion de tabla ya que debo verificar en la tabla juega para luego insertar el comentario en la tabla comentario
  */
 
---Verificar esta RI Tambien
---create
---assertion G10_CHK_VOTO
---check(exists(
---select *
---from gr10_juega j
---        join gr10_usuario u on j.id_usuario = u.id_usuario
---         join gr10_comenta c1 on u.id_usuario = c1.id_usuario
---         join gr10_comentario c2 on c1.id_usuario = c2.id_usuario and c1.id_juego = c2.id_juego
---where (j.id_usuario = c2.id_usuario)
---  and (j.id_juego = c2.id_juego)
---  and (j.finalizado = 't')));
+--create assertion G10_CHK_VOTO
+--  check(exists(
+--              select *
+--              from gr10_juega j
+--                   join gr10_usuario u on j.id_usuario = u.id_usuario
+--                   join gr10_comenta c1 on u.id_usuario = c1.id_usuario
+--                   join gr10_comentario c2 on c1.id_usuario = c2.id_usuario and c1.id_juego = c2.id_juego
+--              );
 
 create or replace function FN_GR10_VERIF_JUGO_JUEGO()
     /*
@@ -202,7 +177,6 @@ begin
                    from gr10_juega
                    where id_usuario = new.id_usuario
                      and id_juego = new.id_juego
-                     and finalizado = 't'
         ))
     then
         raise exception 'El usuario % no puede comentar porque nunca jugó al juego %', new.id_usuario, new.id_juego;
@@ -213,7 +187,7 @@ $$
     language 'plpgsql';
 
 create trigger TR_GR10_VERIF_JUGO_JUEGO
-    before insert
+    before insert or update of id_usuario, id_juego
     on gr10_comentario
     for each row
 execute procedure FN_GR10_VERIF_JUGO_JUEGO();
@@ -221,20 +195,19 @@ execute procedure FN_GR10_VERIF_JUGO_JUEGO();
 /*
 CASO DE PRUEBA:
 
-Este insert funciona ya que el usuario 3 está cargado en la tabla juega con el valor
-finalizado = true por lo tanto se agrega correctamente
+Este insert funciona ya que la combinación id_usuario= 38 e id_juego = 24 están cargados en la tabla juega, eso
+implica que el usuarió jugó al juego, por lo tanto el comentario se agrega correctamente
  */
 
-
---insert into gr10_comentario (id_usuario, id_juego, id_comentario, fecha_comentario, comentario) values (3, 3, 28, '2020-08-17', 'comentarioFunciona');
+--insert into gr10_comentario (id_usuario, id_juego, id_comentario, fecha_comentario, comentario) values (38, 24, 28, '2020-09-17', 'comentarioFunciona');
 
 /*
-Este insert no funciona ya que el usuario 3 está cargado en la tabla juega con el valor
-finalizado = false, por lo tanto se muestra la excepción del trigger ya que no se cumple la condicion
-establecida
+Este insert no funciona ya que la combinación id_usuario= 100 e id_juego = 24 No están cargados en la tabla juega, eso
+implica que el usuarió nunca jugó al juego, por lo tanto el comentario no se agrega a la tabla Comentario
+
  */
 
---insert into gr10_comentario (id_usuario, id_juego, id_comentario, fecha_comentario, comentario) values (2, 2, 23, '2020-08-17', 'comentarioFalla');
+--insert into gr10_comentario (id_usuario, id_juego, id_comentario, fecha_comentario, comentario) values (100, 24, 31, '2020-09-20', 'comentarioFalla');
 
 /*
 ##############################################################################################################
@@ -257,7 +230,7 @@ e insertar en COMENTARIO
 */
 
 -- Incisos A y B
---
+
 
 create or replace function FN_GR10_SINCRONIZAR_COMENTA_COMENTARIO()
     returns trigger as
@@ -285,7 +258,7 @@ end
 $$ language 'plpgsql';
 
 create trigger TR_GR10_SINCRONIZAR_COMENTA_COMENTARIO
-   before insert or update of id_juego, id_usuario
+    before insert or update of id_juego, id_usuario
     on gr10_comentario
     for each row
 execute procedure FN_GR10_SINCRONIZAR_COMENTA_COMENTARIO();
@@ -334,13 +307,13 @@ de la Categoría “Sin Categorías”.
  */
 
 CREATE VIEW GR10_COMENTARIOS_ULTIMO_MES AS
-    SELECT c.*
-        FROM gr10_comentario c
-            JOIN gr10_juego j ON (c.id_juego = j.id_juego)
-            JOIN gr10_categoria ca ON (ca.id_categoria = j.id_categoria)
-            WHERE (ca.descripcion NOT LIKE 'Sin categorías')
-            AND extract(month FROM c.fecha_comentario) = extract(month FROM CURRENT_DATE)
-            AND extract(year FROM c.fecha_comentario) = extract(year FROM CURRENT_DATE);
+SELECT c.*
+FROM gr10_comentario c
+         JOIN gr10_juego j ON (c.id_juego = j.id_juego)
+         JOIN gr10_categoria ca ON (ca.id_categoria = j.id_categoria)
+WHERE (ca.descripcion NOT LIKE 'Sin categorías')
+  AND extract(month FROM c.fecha_comentario) = extract(month FROM CURRENT_DATE)
+  AND extract(year FROM c.fecha_comentario) = extract(year FROM CURRENT_DATE);
 
 /*
 D.2. Identificar aquellos usuarios que han comentado todos los juegos durante el último año,
@@ -348,14 +321,16 @@ teniendo en cuenta que sólo pueden comentar aquellos juegos que han jugado.
  */
 
 CREATE VIEW GR10_COMENTARIOS_USUARIOS_TODOS_JUEGOS_JUGADOS AS
-    SELECT u.id_usuario
-    FROM gr10_usuario u, (SELECT id_usuario
-                          FROM (SELECT id_usuario, id_juego
-                                FROM gr10_comentario
-                                GROUP BY id_usuario, id_juego) AS t1
-                          GROUP BY t1.id_usuario
-                          HAVING COUNT(*) = (SELECT COUNT(*) FROM gr10_juego)) AS u1
-    WHERE u.id_usuario = u1.id_usuario;
+SELECT u.id_usuario
+FROM gr10_usuario u,
+     (SELECT id_usuario
+      FROM (SELECT id_usuario, id_juego
+            FROM gr10_comentario c
+            WHERE (extract(year FROM c.fecha_comentario) = (extract(year FROM CURRENT_DATE)))
+            GROUP BY id_usuario, id_juego) AS t1
+      GROUP BY t1.id_usuario
+      HAVING COUNT(*) = (SELECT COUNT(*) FROM gr10_juego)) AS u1
+WHERE u.id_usuario = u1.id_usuario;
 
 /*
  D.3. Realizar el ranking de los 20 juegos mejor puntuados por los Usuarios. El ranking debe ser
@@ -366,7 +341,7 @@ hubiera sido calificado más de 5 veces.
 CREATE VIEW GR10_RANKING_MEJOR_PUNTUADOS AS
 SELECT j.*
 FROM gr10_juego j
-    JOIN gr10_voto v ON (v.id_juego = j.id_juego)
+         JOIN gr10_voto v ON (v.id_juego = j.id_juego)
 GROUP BY j.id_juego
 
 HAVING (count(j.id_juego) > 5)
