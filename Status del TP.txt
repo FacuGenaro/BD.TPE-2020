@@ -5,3 +5,6 @@ Terminadas las consignas A, B y C
 - Recordar ejecutar en orden Creacion -> Cambios -> Datos
 
 - Todo testeado y funcionando (excepto las vistas)
+
+Informe 
+https://docs.google.com/document/d/1nTpF1OMbrvKAk_fTNqwvsHfPkOZayn7bMyLhNvXf9WI/edit#heading=h.ne38id901tpk

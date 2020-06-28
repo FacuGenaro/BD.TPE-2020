@@ -30,7 +30,7 @@ intentaremos insertar un comentario con una fecha anterior
 
  B. b. Cada usuario sólo puede comentar una vez al día cada juego.
 
- Esta restricción es de tabla ya que afecta a toda la tabla en vez de solo una tupla
+
  */
 
 --alter table gr10_comentario
@@ -60,7 +60,7 @@ $$
     language 'plpgsql';
 
 create trigger TR_GR10_COMENTARIO_DIARIO
-    before insert or update of id_usuario, id_juego
+    before insert or update of fecha_comentario
     on gr10_comentario
     for each row
 execute procedure FN_GR10_COMENTARIO_DIARIO();
@@ -69,22 +69,19 @@ execute procedure FN_GR10_COMENTARIO_DIARIO();
 CASO DE PRUEBA:
 
 Si intento insertar un comentario, el trigger verifica en cada fila si existe un comentario del mismo
-usuario con la nueva fecha del comentario (que sería la fecha actual) y si existe, no permite
+usuario con la nueva fecha del comentario y si existe, no permite
 la insercion del comentario
-
-El siguiente insert no cumple la condicion del trigger ya que la fecha cargada en la bd para
-el comentario del usuario 101 en el juego 1 es 2020-08-31 por lo tanto dará error
-
- */
---insert into gr10_comentario(id_usuario, id_juego, id_comentario, fecha_comentario, comentario) values (101, 1, 1, '2020-08-31', 'este comentario falla');
-
-/*
-En cambio esta sentencia quiere insertar un comentario con una fecha futura a la cargada en la bd
-por eso será insertado sin errores
- */
+*/
+--Este insert cumple la condición del trigger
 
 --insert into gr10_comentario(id_usuario, id_juego, id_comentario, fecha_comentario, comentario) values (101, 1, 2, '2020-09-01', 'este comentario funciona');
 
+/*
+El siguiente insert no cumple la condicion del trigger ya que la fecha cargada en la bd para
+el comentario del usuario 101 en el juego 1 es 2020-08-31 por lo tanto dará error
+*/
+
+--insert into gr10_comentario(id_usuario, id_juego, id_comentario, fecha_comentario, comentario) values (101, 1, 1, '2020-08-31', 'este comentario falla');
 
 /*
 ##############################################################################################################
