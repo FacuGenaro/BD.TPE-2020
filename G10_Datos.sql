@@ -1299,4 +1299,4 @@ INSERT INTO GR10_JUEGA (id_usuario,id_juego, finalizado) VALUES (102,101, TRUE);
 
 
 insert into gr10_comentario (id_usuario, id_juego, id_comentario, fecha_comentario, comentario) values (101, 101, 101, '2020-06-01', 'Comentario 101');
-insert into gr10_comentario (id_usuario, id_juego, id_comentario, fecha_comentario, comentario) values (102, 101, 102, '2020-06-02', 'Comentario 101');
+insert into gr10_comentario (id_usuario, id_juego, id_comentario, fecha_comentario, comentario) values (102, 101, 102, '2020-06-02', 'Comentario 102');
