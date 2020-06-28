@@ -6,5 +6,19 @@ Terminadas las consignas A, B y C
 
 - Todo testeado y funcionando (excepto las vistas)
 
+- Vistas testeadas
+    Para checkear hay que cargar los datos de nuevo y hay 2 usuarios que somos nosotros,
+    Usuario 101: Fede
+    Usuario 102: Facu
+    
+    Fede jugo todos los juegos el ultimo año
+    Facu jugo todos los juegos en el 2017 menos el ultimo juego (LOL) en el 2020
+    
+    Entonces:
+    
+    D.1) Se listan los comentarios de ambos porque jugamos el ultimo mes al LOL
+    D.2) Se lista solo el 101 (Fede) porque jugo todos los juegos el ultimo año
+    D.3) Se prueba con la linea de codigo abajo de la vista, porque muestra los porcentajes
+
 Informe 
 https://docs.google.com/document/d/1nTpF1OMbrvKAk_fTNqwvsHfPkOZayn7bMyLhNvXf9WI/edit#heading=h.ne38id901tpk
