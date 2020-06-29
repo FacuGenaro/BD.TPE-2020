@@ -1,12 +1,18 @@
 <?php
 require_once "MVC/controller.php";
+require_once "index.php";
 
-$id_usuario = $_GET["id"];
+define('HOME', 'Location: http://' . $_SERVER["SERVER_NAME"] . dirname($_SERVER["PHP_SELF"]));
+
 
 $controller = new controller();
 
-if (isset ($id_usuario)){
-    $controller->getData($id_usuario);
+$action = $_GET["action"];
+
+if ($action == "")
+    header('HOME');
+else if (isset ($action)){
+    $controller->getData();
 }
      
 ?>

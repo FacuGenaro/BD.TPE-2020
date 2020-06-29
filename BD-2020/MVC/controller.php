@@ -6,13 +6,13 @@ class Controller{
     private $model;
     private $view;
 
-
     function __construct(){
         $this->model = new model();
         $this->view = new view();
     }
 
-    function getData($id_usuario){
+    function getData(){
+       $id_usuario = $_GET['id']; 
        $data = $this->model->getUsuariosFiltrados($id_usuario);
        $this->view->show($data);
     }
