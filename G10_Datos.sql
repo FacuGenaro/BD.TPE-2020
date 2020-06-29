@@ -1,5 +1,5 @@
---set search_path = unc_248270;
-set search_path = unc_248580;
+set search_path = unc_248270;
+--set search_path = unc_248580;
 
 -- NIVEL
 INSERT INTO GR10_NIVEL (id_nivel_juego,descripcion) VALUES (1,'nec, malesuada ut, sem.');

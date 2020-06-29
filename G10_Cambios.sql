@@ -1,5 +1,5 @@
---set search_path = unc_248270;
-set search_path = unc_248580;
+set search_path = unc_248270;
+--set search_path = unc_248580;
 /*
 ##############################################################################################################
 ##############################################################################################################
@@ -14,7 +14,7 @@ no es nulo.
 
 alter table gr10_comenta
     add constraint GR10_CHK_PRIMER_COMENTARIO
-        check ( (fecha_primer_com < fecha_ultimo_com) or (fecha_ultimo_com is null));
+        check ((fecha_primer_com < fecha_ultimo_com) or (fecha_ultimo_com is null));
 
 /*
 Para esta prueba tomamos como ejemplo el usuario 101 cuya fecha_primer_com es 2020_08_31 que posee comentarios en todos los juegos e
@@ -28,21 +28,10 @@ intentaremos insertar un comentario con una fecha anterior
 ##############################################################################################################
 ##############################################################################################################
 
- B. b. Cada usuario sólo puede comentar una vez al día cada juego.
+B. b. Cada usuario sólo puede comentar una vez al día cada juego.
 
 
  */
-
---alter table gr10_comentario
---    add constraint GR10_CHK_COMENTARIO
---        check (not exists(select c.id_usuario
---                          from gr10_comentario c
---                          group by c.fecha_comentario, c.id_usuario, c.id_juego
---                          having count(*) > 1
---                          where (extract(year from c.fecha_comentario) = extract(year from CURRENT_DAY)) AND
---                              (extract(month from c.fecha_comentario) = extract(month from c.fecha_comentario)) AND
---                              (extract(day from c.fecha_comentario) = extract(day from c.fecha_comentario))
---               );
 
 create or replace function FN_GR10_COMENTARIO_DIARIO()
     returns trigger as
@@ -94,20 +83,7 @@ el comentario del usuario 101 en el juego 1 es 2020-08-31 por lo tanto dará err
 
  B.c. Un usuario no puede recomendar un juego si no ha votado previamente dicho juego.
 
- Esta es una restriccion global ya que involucra más de una tabla
  */
-
---Si lo que estoy insertando existe en la tabla generada por el inner join, entonces puedo insertar
---create assertion as G10_CHK_VOTO
---    check( not exists(
---                select 1
---                from gr10_recomendacion r where not exists(
---                      select 1
---                      from gr10_voto v
---                      where (v.id_usuario = r.id_usuario) AND
---                          (v.id_juego = r.id_juego)
---                  )
---        );
 
 create or replace function FN_GR10_VERIF_RECOM_VOTO()
     -- En esta funcion verifico si el usuario votó el juego para poder recomendarlo
@@ -160,18 +136,6 @@ B.d. Un usuario no puede comentar un juego que no ha jugado.
 
 Es una restriccion de tabla ya que debo verificar en la tabla juega para luego insertar el comentario en la tabla comentario
  */
-
---create assertion G10_CHK_VOTO
---  check(not exists(
---              select *
---              from gr10_comenta c
---              where (not exists(
---                  select *
---                  from gr20_juega j
---                  where (c.id_usuario = j.id_usuario) and
---                  (c.id_juego = j.id_juego)
---              )
---         );
 
 create or replace function FN_GR10_VERIF_JUGO_JUEGO()
     /*
@@ -238,7 +202,6 @@ e insertar en COMENTARIO
 */
 
 -- Incisos A y B
-
 
 create or replace function FN_GR10_SINCRONIZAR_COMENTA_COMENTARIO()
     returns trigger as
@@ -337,7 +300,8 @@ FROM gr10_usuario u,
             WHERE (extract(year FROM c.fecha_comentario) = (extract(year FROM CURRENT_DATE)))
             GROUP BY id_usuario, id_juego) AS t1
       GROUP BY t1.id_usuario
-      HAVING COUNT(*) = (SELECT COUNT(*) FROM gr10_juego)) AS u1
+      HAVING COUNT(*) = (SELECT COUNT(*)
+                            FROM gr10_juego)) AS u1
 WHERE u.id_usuario = u1.id_usuario;
 
 /*
@@ -358,6 +322,7 @@ LIMIT 20;
 
 /*
  Para verificar:
+ La siguiente implementacion imprime los id de los juegos con su puntaje
  */
 
 --select id_juego, avg(valor_voto)
