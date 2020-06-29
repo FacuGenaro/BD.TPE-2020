@@ -35,9 +35,13 @@ intentaremos insertar un comentario con una fecha anterior
 
 --alter table gr10_comentario
 --    add constraint GR10_CHK_COMENTARIO
---        check (not exists(select 1
---                          from gr10_comentario
---                          where fecha_comentario = current_date)
+--        check (not exists(select c.id_usuario
+--                          from gr10_comentario c
+--                          group by c.fecha_comentario, c.id_usuario, c.id_juego
+--                          having count(*) > 1
+--                          where (extract(year from c.fecha_comentario) = extract(year from CURRENT_DAY)) AND
+--                              (extract(month from c.fecha_comentario) = extract(month from c.fecha_comentario)) AND
+--                              (extract(day from c.fecha_comentario) = extract(day from c.fecha_comentario))
 --               );
 
 create or replace function FN_GR10_COMENTARIO_DIARIO()
@@ -95,11 +99,15 @@ el comentario del usuario 101 en el juego 1 es 2020-08-31 por lo tanto dará err
 
 --Si lo que estoy insertando existe en la tabla generada por el inner join, entonces puedo insertar
 --create assertion as G10_CHK_VOTO
---    check( exists(
+--    check( not exists(
 --                select 1
---                from gr10_voto v
---                    join gr10_recomendacion r on v.id_usuario = r.id_usuario and v.id_juego = r.id_juego
---        ));
+--                from gr10_recomendacion r where not exists(
+--                      select 1
+--                      from gr10_voto v
+--                      where (v.id_usuario = r.id_usuario) AND
+--                          (v.id_juego = r.id_juego)
+--                  )
+--        );
 
 create or replace function FN_GR10_VERIF_RECOM_VOTO()
     -- En esta funcion verifico si el usuario votó el juego para poder recomendarlo
@@ -154,13 +162,16 @@ Es una restriccion de tabla ya que debo verificar en la tabla juega para luego i
  */
 
 --create assertion G10_CHK_VOTO
---  check(exists(
+--  check(not exists(
 --              select *
---              from gr10_juega j
---                   join gr10_usuario u on j.id_usuario = u.id_usuario
---                   join gr10_comenta c1 on u.id_usuario = c1.id_usuario
---                   join gr10_comentario c2 on c1.id_usuario = c2.id_usuario and c1.id_juego = c2.id_juego
---              );
+--              from gr10_comenta c
+--              where (not exists(
+--                  select *
+--                  from gr20_juega j
+--                  where (c.id_usuario = j.id_usuario) and
+--                  (c.id_juego = j.id_juego)
+--              )
+--         );
 
 create or replace function FN_GR10_VERIF_JUGO_JUEGO()
     /*
