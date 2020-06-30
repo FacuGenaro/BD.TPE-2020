@@ -12,13 +12,7 @@
     
         public function getJuegosVotados(){
             $sentencia = $this->db->prepare("
-                select j.id_juego, j.nombre_juego, count(v.id_voto) AS votos
-                    from gr10_juego j
-                     join gr10_juega j2 on j.id_juego = j2.id_juego
-                     join gr10_voto v on j2.id_usuario = v.id_usuario and j2.id_juego = v.id_juego
-                group by (j.id_juego, j.nombre_juego)
-                order by votos desc
-                limit 10;");
+                SELECT * FROM unc_248270.gr10_juegos_mas_votados;");
             $sentencia -> execute();
             $juegos = $sentencia->fetchAll();
             return $juegos;
