@@ -1,5 +1,3 @@
---set search_path = unc_248270;
-set search_path = unc_248580;
 /*
 ##############################################################################################################
 ##############################################################################################################
@@ -331,11 +329,22 @@ LIMIT 20;
 --having count(*) > 5
 --order by avg(valor_voto) DESC;
 
-/*
 
+CREATE VIEW GR10_JUEGOS_MAS_VOTADOS AS
+select j.id_juego, j.nombre_juego, count(v.id_voto) AS votos
+from gr10_juego j
+    join gr10_juega j2 on (j.id_juego = j2.id_juego)
+    join gr10_voto v on (j2.id_usuario = v.id_usuario) and (j2.id_juego = v.id_juego)
+group by (j.id_juego, j.nombre_juego)
+order by votos desc
+limit 10;
+
+/*
 Dejamos acá comentados los usuarios que creamos para hacer las pruebas con los comentarios ES SUPER IMPORTANTE QUE LOS INSERTEN ANTES DE PROBAR EL FUNCIONAMIENTO
 DE LOS TRIGGERS EN COMENTARIOS
+ */
 
+/*
 INSERT INTO GR10_USUARIO (id_usuario,nombre,apellido,email,id_tipo_usuario,password) VALUES (101,'Federico','Fuhr','fedef@hotmail.com',8,'LBV82AJZ0IW');
 INSERT INTO GR10_USUARIO (id_usuario,nombre,apellido,email,id_tipo_usuario,password) VALUES (102,'Facundo','Genaro','facug@hotmail.com',8,'LBV82AJZ0IW');
 
@@ -758,3 +767,4 @@ INSERT INTO GR10_JUEGA (id_usuario,id_juego, finalizado) VALUES (102,101, TRUE);
 insert into gr10_comentario (id_usuario, id_juego, id_comentario, fecha_comentario, comentario) values (101, 101, 101, '2020-06-01', 'Comentario 101');
 insert into gr10_comentario (id_usuario, id_juego, id_comentario, fecha_comentario, comentario) values (102, 101, 102, '2020-06-02', 'Comentario 102');
 */
+
